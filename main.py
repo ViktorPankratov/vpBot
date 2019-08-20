@@ -69,11 +69,11 @@ def get_weather_message(weather):
 
 
 def translate(message):
-    t = Translator(message.text, YANDEX_API_KEY)
-    if t.get_language() == 'en':
-        result = t.get_translation('ru')
+    t = Translator(YANDEX_API_KEY)
+    if t.get_language(message.text) == 'en':
+        result = t.get_translation(message.text, 'ru')
     else:
-        result = t.get_translation('en')
+        result = t.get_translation(message.text, 'en')
     bot.send_message(message.chat.id, result)
 
 
