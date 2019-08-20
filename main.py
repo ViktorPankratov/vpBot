@@ -1,5 +1,5 @@
 import telebot
-from telebot.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from telebot.types import Message, ReplyKeyboardMarkup
 from config import Config
 from main_strings import MainStrings
 from weather import Weather
@@ -13,17 +13,9 @@ YANDEX_API_KEY = config.yandex_api_key
 bot = telebot.TeleBot(TOKEN)
 
 text = MainStrings()
-translator_text = text.translator
-weather_text = text.weather
-button_translator = KeyboardButton('/' + translator_text)
-button_weather = KeyboardButton('/' + weather_text)
 
 option_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-option_keyboard.add(button_translator, button_weather)
-
-option_message = {button_weather.text: text.button_weather,
-                  button_translator.text: text.button_translator}
-current_option = ''
+option_keyboard.add(text.button_translator, text.button_weather)
 
 
 @bot.message_handler(commands=['start'])
@@ -32,19 +24,16 @@ def process_start_command(message: Message):
                      reply_markup=option_keyboard)
 
 
-@bot.message_handler(commands=[weather_text, translator_text])
+@bot.message_handler(commands=['weather'])
 def set_current_option(message: Message):
-    global current_option
-    current_option = message.text
-    bot.send_message(message.chat.id, option_message[current_option])
+    bot.send_message(message.chat.id, text.button_weather)
+    bot.register_next_step_handler(message, send_weather)
 
 
-@bot.message_handler(func=lambda message: True)
-def runner(message: Message):
-    if current_option == button_weather.text:
-        send_weather(message)
-    elif current_option == button_translator.text:
-        translate(message)
+@bot.message_handler(commands=['translate'])
+def set_current_option(message: Message):
+    bot.send_message(message.chat.id, text.button_translator)
+    bot.register_next_step_handler(message, translate)
 
 
 def send_weather(message):
