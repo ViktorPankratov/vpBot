@@ -1,30 +1,35 @@
 import telebot
 from telebot.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from config import Config
+from main_strings import MainStrings
 from weather import Weather
 from translator import Translator
 
-TOKEN = '676056615:AAFSxnrwZ1-2ZLgTj1Y2s0K4quMZabhxAnk'
-WEATHER_APP_KEY = 'c1b4f3df7e0e3fd445d4f8ed0b590d5e'
-YANDEX_API_KEY = 'trnsl.1.1.20190818T184330Z.5bf78df0e0844603.2bc3a37ba31aac853258c90fa800377242449bd6'
+config = Config()
+TOKEN = config.telebot_token
+WEATHER_APP_KEY = config.weather_app_key
+YANDEX_API_KEY = config.yandex_api_key
 
 bot = telebot.TeleBot(TOKEN)
 
-translator_text = 'translate'
-weather_text = 'weather'
+text = MainStrings()
+translator_text = text.translator
+weather_text = text.weather
 button_translator = KeyboardButton('/' + translator_text)
 button_weather = KeyboardButton('/' + weather_text)
 
 option_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
 option_keyboard.add(button_translator, button_weather)
 
-option_message = {button_weather.text: 'Введи название города',
-                  button_translator.text: 'Напиши слово или фразу для перевода'}
+option_message = {button_weather.text: text.button_weather,
+                  button_translator.text: text.button_translator}
 current_option = ''
 
 
 @bot.message_handler(commands=['start'])
 def process_start_command(message: Message):
-    bot.send_message(message.chat.id, 'Привет! 👋', reply_markup=option_keyboard)
+    bot.send_message(message.chat.id, text.button_translatorhe,
+                     reply_markup=option_keyboard)
 
 
 @bot.message_handler(commands=[weather_text, translator_text])
@@ -45,7 +50,7 @@ def runner(message: Message):
 def send_weather(message):
     weather = Weather(WEATHER_APP_KEY, message.text, 'ru')
     if not weather.get_weather():
-        bot.send_message(message.chat.id, 'Упс, что-то пошло не так!')
+        bot.send_message(message.chat.id, text.oops)
     else:
         current, forecast = weather.get_weather()
         result = get_weather_message(current) + get_weather_message(forecast)
@@ -54,8 +59,12 @@ def send_weather(message):
 
 def get_weather_message(weather):
     celcius_icon = '\u2103'
-    weather_message = '*{}*: {}{}, {}{}\n'.format(weather['label'], int(weather['temperature']), celcius_icon,
-                                                  weather['weather'], weather['icon'])
+    weather_message = '*{label}*: {temp}{unit_symbol}, {desc}{icon}\n'.format(
+        label=weather['label'],
+        temp=int(weather['temperature']),
+        unit_symbol=celcius_icon,
+        desc=weather['weather'],
+        icon=weather['icon'])
     return weather_message
 
 
