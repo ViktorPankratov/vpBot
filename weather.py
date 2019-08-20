@@ -3,6 +3,7 @@ from weather_strings import icon, Strings
 
 SITE_URL = 'https://api.openweathermap.org/data/2.5/'
 text = Strings()
+WEATHER_APP_KEY = 'c1b4f3df7e0e3fd445d4f8ed0b590d5e'
 
 
 class Weather:
@@ -28,20 +29,19 @@ class Weather:
         return api_response.json()
 
     def get_weather(self):
-        if int(self.get_api_response('weather')['cod']) != 200:
-            return False
-        else:
+        try:
             current_weather = self.get_api_response('weather')
             current = self.get_weather_data(current_weather)
             current['label'] = text.weather_label
-
-        if int(self.get_api_response('forecast')['cod']) != 200:
+        except KeyError:
             return False
-        else:
+        try:
             forecast_weather = self.get_api_response('forecast')
             # nearest_forecast
             forecast = self.get_weather_data(forecast_weather['list'][0])
             forecast['label'] = text.forecast_label
+        except KeyError:
+            return False
         return current, forecast
 
     def get_weather_data(self, weather_info):
